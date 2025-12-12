@@ -14,7 +14,7 @@ def checkbin(*, infn, buf, beg, end=None):
     assert (
         len(buf) == end + 1 - beg
     )  # supplied buffer size must match that computed from beginning and end addresses
-    output = [f"{os.path.basename(infn)!r} BEG: *{beg:X}:{end:X} END:", ""]
+    output = [f"{os.path.basename(infn)!r} BEG: *{beg:X}.{end:X} END:", ""]
     cksum = beg
     addr = beg
     carry = 0x100
@@ -48,14 +48,14 @@ def smoketest():
         infn="one-byte smoke test 1", buf=b"\x00", beg=0x391, end=0x391
     ) == (
         """
-'one-byte smoke test 1' BEG: *391:391 END:
+'one-byte smoke test 1' BEG: *391.391 END:
 
 0391- 00                       $2111
         """.strip()
     )
     assert checkbin(infn="one-byte smoke test 2", buf=b"\x4c", beg=0x0, end=0x0) == (
         """
-'one-byte smoke test 2' BEG: *0:0 END:
+'one-byte smoke test 2' BEG: *0.0 END:
 
 0000- 4C                       $4CA6
         """.strip()
@@ -64,7 +64,7 @@ def smoketest():
         infn="one-byte smoke test 3", buf=b"\x20", beg=0x300, end=0x300
     ) == (
         """
-'one-byte smoke test 3' BEG: *300:300 END:
+'one-byte smoke test 3' BEG: *300.300 END:
 
 0300- 20                       $2390
         """.strip()
@@ -102,7 +102,7 @@ def smoketest():
         beg=0x300,
     ) == (
         """
-'checkbin_300_3CD_raw.bin' BEG: *300:3CD END:
+'checkbin_300_3CD_raw.bin' BEG: *300.3CD END:
 
 0300- 20 58 FF BA CA BD 00 01  $B2E1
 0308- 18 69 1F 8D F9 03 85 62  $286C
