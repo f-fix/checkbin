@@ -1,13 +1,43 @@
 #!/usr/bin/env python3
 
+"""
+Python implementation of Softkey's CHECKBIN checksum routine. This checksum routine and hex dumper were used for Apple II programs in various Softkey publications; for more information, refer to http://justsolve.archiveteam.org/wiki/Checkbin/Checksoft
+"""
+
 import os.path
 import sys
 
-ror = lambda cbyte: ((cbyte * 0x201) >> 1) & 0x1FF
-rol = lambda cbyte: ((cbyte * 0x201) >> 8) & 0x1FF
+ror = (  # rotate one bit right; carry flag is 0x100
+    lambda cbyte: ((cbyte * 0x201) >> 1) & 0x1FF
+)
+rol = (  # rotate one bit left; carry flag is 0x100
+    lambda cbyte: ((cbyte * 0x201) >> 8) & 0x1FF
+)
+
+
+def update_cksum(*, cksum, byte):
+    """
+    CHECKBIN-compatible checksum routine
+    """
+    tmp = rol(ror(0x100 | byte) ^ (cksum & 0xFF)) ^ (cksum >> 8)
+    cksum = (cksum & 0xFF00) | ((tmp) & 0xFF)
+    carry = tmp & 0x100
+    return (cksum & 0xFF) | ((ror((carry | (cksum & 0xFF)) ^ (cksum >> 8)) & 0xFF) << 8)
 
 
 def checkbin(*, infn, buf, beg, end=None):
+    """
+    produce a hex dump for input file name `infn` whose contents are held in `buf` with start address `beg` and optional end address `end`. the output should be compatible with CHECKBIN.
+
+    this is equivalent to the following on an Apple II:
+    At the BASIC prompt:
+    - `]BLOAD myprog` then Return (`myprog` is the binary file to be displayed)
+    - `]BRUN CHECKBIN,A$xxxx` then Return (`xxxx` is a hex start address which has 0xD0 bytes free that won't overlap `myprog`; if omitted defaults to `300`)
+    - `]CALL -151` then Return
+    At the machine language monitor prompt:
+    - `*yyyy,zzzz` then Ctrl-Y and Return (`yyyy` is a hex start address for the dump and `zzzz` is a hex end address for the dump)
+    - `3D0G` then Return to return to BASIC
+    """
     if end is None:
         end = beg + len(buf) - 1
     assert beg <= end  # cannot dump an empty region or a negative-sized one
@@ -17,7 +47,6 @@ def checkbin(*, infn, buf, beg, end=None):
     output = [f"{os.path.basename(infn)!r} BEG: *{beg:X}.{end:X} END:", ""]
     cksum = beg
     addr = beg
-    carry = 0x100
     while addr <= (end | 7):
         if addr <= end:
             if (addr % 8 == 0) or (addr == beg):
@@ -25,13 +54,7 @@ def checkbin(*, infn, buf, beg, end=None):
                     output += [""]
                 output += [f"{addr:04X}-"]
             output[-1] += f" {buf[0]:02X}"
-            carry = 0x100  # carry = 0x000 if (addr & 7) == 7 else 0x100
-            tmp = rol(ror(carry | buf[0]) ^ (cksum & 0xFF)) ^ (cksum >> 8)
-            cksum = (cksum & 0xFF00) | ((tmp) & 0xFF)
-            carry = tmp & 0x100
-            cksum = (cksum & 0xFF) | (
-                (ror((carry | (cksum & 0xFF)) ^ (cksum >> 8)) & 0xFF) << 8
-            )
+            cksum = update_cksum(cksum=cksum, byte=buf[0])
         else:
             output[-1] += "   "
         if addr % 8 == 7:
