@@ -21,8 +21,7 @@ def update_cksum(*, cksum, byte):
     """
     tmp = rol(ror(0x100 | byte) ^ (cksum & 0xFF)) ^ (cksum >> 8)
     cksum = (cksum & 0xFF00) | ((tmp) & 0xFF)
-    carry = tmp & 0x100
-    return (cksum & 0xFF) | ((ror((carry | (cksum & 0xFF)) ^ (cksum >> 8)) & 0xFF) << 8)
+    return (cksum & 0xFF) | ((ror(tmp ^ (cksum >> 8)) & 0xFF) << 8)
 
 
 def checkbin(*, infn, buf, beg, end=None):
