@@ -20,4 +20,5 @@ outputs:
 4448- 4F 20 57 4F 52 4C 44     $E50F
 ```
 equivalent output from the Softkey CHECKBIN running in an Apple II emulator: (Ctrl-Y was pressed before Return on the last line)
+<br />
 <img width="615" height="424" alt="image" src="https://github.com/user-attachments/assets/428b947c-cbed-4faa-a1bb-d6662b61c353" />
