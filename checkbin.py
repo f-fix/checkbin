@@ -7,12 +7,19 @@ Python implementation of Softkey's CHECKBIN checksum routine. This checksum rout
 import os.path
 import sys
 
-ror = (  # rotate one bit right; carry flag is 0x100
-    lambda cbyte: ((cbyte * 0x201) >> 1) & 0x1FF
-)
-rol = (  # rotate one bit left; carry flag is 0x100
-    lambda cbyte: ((cbyte * 0x201) >> 8) & 0x1FF
-)
+
+def ror(cbyte):
+    """
+    rotate one bit right; carry flag is 0x100
+    """
+    return ((cbyte * 0x201) >> 1) & 0x1FF
+
+
+def rol(cbyte):
+    """
+    rotate one bit left; carry flag is 0x100
+    """
+    return ((cbyte * 0x201) >> 8) & 0x1FF
 
 
 def update_cksum(*, cksum, byte):
